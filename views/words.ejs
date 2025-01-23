@@ -3,9 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%=pageTitle></title>
+    <title><%=pageTitle%></title>
 </head>
 <body>
-    <h1>i'm in ejs render</h1>
+    
+    <h1>im in ejs, rendered! </h1>
+
+    <p><%=pageTitle%></p>
+    
+    <h2>here a post method</h2>
+    <form method="POST" action="/saveMyName">
+        <input name="myName">
+        <input type="submit" value="save my name!">
+
+    </form>
+
+    <h2>here a get method</h2>
+    <form method="GET" action="/saveMyNameGet">
+        <input name="myNameGet">
+        <input type="submit" value="save my name!">
+
+    </form>
+
+
 </body>
 </html>
