@@ -36,7 +36,33 @@ async function run() {
     await client.close();
   }
 }
-run().catch(console.dir);
+//run().catch(console.dir);
+
+async function getData() {
+
+
+  await client.connect();
+  let collection =  await client.db("mason-app-database").collection("mason-app-data")
+
+  let results = await collection.find({}).toArray();
+    
+
+    console.log(results)
+
+    return results;
+}
+
+
+
+app.get('/read', async function (req, res){
+  let getDataResults = await getData();
+  console.log(getDataResults);
+  res.render('data', 
+    {data_name: getDataResults} );
+
+})
+
+
 
 // begin all my middlewares 
 
