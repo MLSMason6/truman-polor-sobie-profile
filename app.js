@@ -3,6 +3,7 @@ require('dotenv').config()
 const app = express()
 const port = process.env.PORT || 3000;  
 const bodyParser = require('body-parser')
+const {ObjectId} = require('mongodb');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = process.env.MONGO_URI;
 
@@ -62,8 +63,53 @@ app.get('/read', async function (req, res){
 
 })
 
+ app.post('/insert', async (req,res)=> {
+//app.get('/insert', async (req,res)=> {
 
 
+  console.log('in /insert');
+  
+  let newData = req.body.myName; //only for POST, GET is req.params? 
+  // let newData = req.query.myNameGet;
+  console.log(newData);
+  //connect to db,
+  await client.connect();
+  //point to the collection 
+  await client.db("mason-app-database").collection("mason-app-data").insertOne({data_name: newData});
+  res.redirect('/read');
+
+}); 
+
+
+app.post('/delete/:id', async (req,res)=>{
+
+  console.log("in delete, req.parms.id: ", req.params.id)
+
+  client.connect; 
+  const collection = client.db("mason-app-database").collection("mason-app-data");
+  let result = await collection.findOneAndDelete( 
+  {"_id": new ObjectId(req.params.id)}).then(result => {
+  console.log(result); 
+  res.redirect('/read');})
+
+  
+
+})
+
+app.post('/update', async (req,res)=>{
+
+  console.log("req.body: ", req.body)
+
+  client.connect; 
+  const collection = client.db("mason-app-database").collection("mason-app-data");
+  let result = await collection.findOneAndUpdate( 
+  {"_id": new ObjectId(req.body.nameID)}, { $set: {"fname": req.body.inputUpdateName } }
+)
+.then(result => {
+  console.log(result); 
+  res.redirect('/read');
+})
+}); 
 // begin all my middlewares 
 
 app.get('/', function (req, res) {
