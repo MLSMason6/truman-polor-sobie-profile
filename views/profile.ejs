@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>mason sobie profile</title>
+</head>
+<body>
+
+<main>
+
+    <form method="POST" action="insert/">
+        <input name="title">
+        <input name="post">
+        <button class="btn btn-primary" role="submit">new post</button>
+      </form>
+
+      
+    <% profileData.forEach(result=> { %>
+        <div class="col-md-8">
+        
+  
+      <form method="POST" action="update/">
+        <input name="updateTitle" value="<%= result.title %>">
+        <input name="updatePost" value="<%= result.post %>"> 
+        <input type="hidden" name="updateId" value="<%=result._id %>">
+        <button class="btn btn-primary" role="submit"><i class="bi bi-pencil"></i></button>
+      </form>
+      
+  
+  
+      <form method="POST" action="delete/">
+        <input type="hidden" name="deleteId" value="<%=result._id %>">
+        <button class="btn btn-primary" role="submit"><i class="bi bi-trash3"></i></button>
+      </form>
+  
+  
+    </div>
+      <% }); %>
+
+</main>
+
+
+
+
+  </body>
+  </html>
