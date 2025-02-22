@@ -1,85 +1,94 @@
-const express = require('express')
-require('dotenv').config()
-const app = express()
-const port = process.env.PORT || 3000;  
-const bodyParser = require('body-parser')
-const { ObjectId } = require('mongodb')
+const express = require('express');
+require('dotenv').config();
+const app = express();
+const port = process.env.PORT || 3000;
+const bodyParser = require('body-parser');
+const { ObjectId } = require('mongodb');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+
 const uri = process.env.MONGO_URI;
 
+// Middleware
 app.set('view engine', 'ejs');
-app.use(bodyParser.urlencoded({extended: true})); 
-app.use(express.static(__dirname + '/public'))
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(__dirname + '/public'));
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
+// Initialize MongoDB Connection
+let db, mongoCollection;
+async function connectDB() {
+  try {
+    const client = new MongoClient(uri, {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+      },
+    });
+    await client.connect();
+    db = client.db('masonSobieProfile');
+    mongoCollection = db.collection('masonSobieBlog');
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB Connection Error:', error);
+    process.exit(1);
+  }
+}
+connectDB();
+
+// Routes
+app.get('/', async (req, res) => {
+  try {
+    let results = await mongoCollection.find({}).toArray();
+    res.render('profile', { profileData: results });
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).send('Server Error');
   }
 });
 
-const mongoCollection = client.db("masonSobieProfile").collection("masonSobieBlog"); 
-
-function initProfileData() {
-
-  mongoCollection.insertOne({ 
-    title: "this is blog title",
-    post: "this is the post"
-  });
-
-}
-
-// initProfileData(); 
-
-
-app.get('/', async function (req, res) {
-  
-  let results = await mongoCollection.find({}).toArray(); 
-  
-  res.render('profile', 
-    { profileData : results} ); 
-
-})
-
-app.post('/insert', async (req,res)=> {
-
-  let results = await mongoCollection.insertOne({ 
-    title: req.body.title,
-    post: req.body.post
-  });
-
-  res.redirect('/');
-
-}); 
-app.post('/delete', async function (req, res) {
-  
-    let result = await mongoCollection.findOneAndDelete( 
-    {
-      "_id": new ObjectId(req.body.deleteId)
+app.post('/insert', async (req, res) => {
+  try {
+    let { title, post } = req.body;
+    if (!title || !post) {
+      return res.status(400).send('Title and Post are required.');
     }
-  ).then(result => {
-    
+    await mongoCollection.insertOne({ title, post });
     res.redirect('/');
-  })
+  } catch (error) {
+    console.error('Error inserting data:', error);
+    res.status(500).send('Server Error');
+  }
+});
 
-}); 
+app.post('/delete', async (req, res) => {
+  try {
+    let deleteId = req.body.deleteId;
+    if (!ObjectId.isValid(deleteId)) {
+      return res.status(400).send('Invalid ID');
+    }
+    await mongoCollection.deleteOne({ _id: new ObjectId(deleteId) });
+    res.redirect('/');
+  } catch (error) {
+    console.error('Error deleting data:', error);
+    res.status(500).send('Server Error');
+  }
+});
 
-app.post('/update', async (req,res)=>{
-  let result = await mongoCollection.findOneAndUpdate( 
-  {_id: ObjectId.createFromHexString(req.body.updateId)}, { 
-    $set: 
-      {
-        title : req.body.updateTitle, 
-        post : req.body.updatePost 
-      }
-     }
-  ).then(result => {
-  console.log(result); 
-  res.redirect('/');
-})
-}); 
+app.post('/update', async (req, res) => {
+  try {
+    let { updateId, updateTitle, updatePost } = req.body;
+    if (!ObjectId.isValid(updateId)) {
+      return res.status(400).send('Invalid ID');
+    }
+    await mongoCollection.updateOne(
+      { _id: new ObjectId(updateId) },
+      { $set: { title: updateTitle, post: updatePost } }
+    );
+    res.redirect('/');
+  } catch (error) {
+    console.error('Error updating data:', error);
+    res.status(500).send('Server Error');
+  }
+});
 
-
-app.listen(port, ()=> console.log(`server is running on ... localhost:${port}`) );
+app.listen(port, () => console.log(`Server is running on http://localhost:${port}`));
