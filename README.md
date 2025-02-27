@@ -36,4 +36,3 @@ This app uses:
 
 ---
 
-## Folder Structure
